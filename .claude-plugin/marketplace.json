@@ -1,0 +1,7 @@
+{
+  "name": "debug-root-cause",
+  "owner": { "name": "Bassem Mo'men" },
+  "plugins": [
+    { "name": "debug-root-cause", "source": "./", "description": "Makes your AI agent find and prove the root cause of a bug before changing code, instead of guess-and-patch debugging." }
+  ]
+}
