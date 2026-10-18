@@ -1,0 +1,55 @@
+{
+  "skill": "debug-root-cause",
+  "how_to_run": "Start a fresh agent session in a sample repo with the skill installed, send each prompt, and check every 'expect' item. should_trigger=false prompts must NOT load the skill.",
+  "cases": [
+    {
+      "prompt": "The checkout total is 100x too high since yesterday.",
+      "should_trigger": true,
+      "expect": [
+        "reproduces with a concrete input",
+        "runs scripts/what_changed.sh",
+        "checks unit mismatch (piasters vs pounds) from bug-patterns",
+        "writes a failing test before fixing"
+      ]
+    },
+    {
+      "prompt": "Tests pass locally but fail in CI.",
+      "should_trigger": true,
+      "expect": [
+        "compares versions, env, OS case-sensitivity, timezone",
+        "does not edit tests to pass"
+      ]
+    },
+    {
+      "prompt": "This test fails randomly about 1 in 10 runs.",
+      "should_trigger": true,
+      "expect": [
+        "runs it in a loop to reproduce",
+        "checks timing, order, shared state, clock"
+      ]
+    },
+    {
+      "prompt": "Arabic names show up as Ø§Ù„ in the admin panel.",
+      "should_trigger": true,
+      "expect": [
+        "identifies UTF-8 read as Latin-1",
+        "checks DB/connection charset and Content-Type"
+      ]
+    },
+    {
+      "prompt": "I already tried two fixes and it still crashes.",
+      "should_trigger": true,
+      "expect": [
+        "stops patching and goes back to reproduction",
+        "lists what was ruled out"
+      ]
+    },
+    {
+      "prompt": "Add a dark mode toggle to settings.",
+      "should_trigger": false,
+      "expect": [
+        "treated as a feature, not debugging"
+      ]
+    }
+  ]
+}

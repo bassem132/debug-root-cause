@@ -1,13 +1,13 @@
 ---
 name: debug-root-cause
-description: Find the root cause of a bug before changing code, using reproduce → hypothesize → test → fix. Use when something is broken, throws, fails a test, behaves differently than expected, or is slow — and especially after one fix attempt has already failed.
+description: Find and prove the root cause of a bug before changing code (reproduce → hypothesize → test → fix → verify). Use when something is broken, throws an error, crashes, fails a test, gives the wrong result, is flaky, is slow, "worked yesterday", or "works locally but not in CI", and especially after one fix attempt has already failed. Do not use for new features with no bug.
 author: Bassem Mo'men
 license: MIT
 ---
 
 # Debug root cause
 
-Guess-and-patch debugging piles fixes on top of a bug you never understood. Each failed guess adds noise. This skill forces understanding first, so the first real fix is usually the last.
+Guess-and-patch debugging piles fixes on top of a bug nobody understood, and every failed guess adds noise. This skill makes you understand the bug first, so the first real fix is usually the last one.
 
 ## The rule
 
@@ -15,28 +15,44 @@ Guess-and-patch debugging piles fixes on top of a bug you never understood. Each
 
 ## Procedure
 
-1. **Reproduce it.** Get a command, test or click path that fails every time. Write it down. If you can't reproduce, gather more data (logs, inputs, environment) before anything else.
-2. **Read the actual error.** The full message and stack trace, not a summary. Note the first frame in *this* project's code.
-3. **Shrink the case.** Remove inputs, steps and code until the failure is as small as possible. Smaller cases make causes obvious.
-4. **Check what changed.** `git log`, `git diff`, dependency bumps, env/config changes. A bug that "just started" usually has a recent cause.
-5. **List 2–3 hypotheses** and, for each, a quick test that would rule it out. Test the cheapest one first. Add logging or assertions to see real values instead of assuming them.
-6. **Confirm the cause.** You should be able to make the bug appear and disappear on purpose.
-7. **Write a failing test** that captures the bug (when the project has tests).
-8. **Make the smallest fix** at the cause, not at the symptom. Remove your temporary logging.
-9. **Verify:** the reproduction now passes, the new test passes, and the existing tests still pass.
+Keep notes in the format of [templates/debug-log.md](templates/debug-log.md) as you go, so you don't re-test ideas you already ruled out.
+
+1. **Reproduce it.** Get a command, test or click path that fails every time, and write it down. If you can't reproduce it, gather more data first (logs, inputs, environment, which users).
+2. **Read the actual error.** Read the full message and stack trace, not a summary. Note the first frame that is in *this* project's code.
+3. **Check what changed** when it "used to work":
+   ```bash
+   bash <skill-dir>/scripts/what_changed.sh "3 days ago"      # or a tag/sha: v1.4.0, HEAD~20
+   ```
+   It shows uncommitted changes, recent commits, the files that changed most, dependency and lockfile bumps, config/env/CI changes, and runtime versions.
+4. **Shrink the case.** Remove inputs, steps and code until the failure is as small as you can make it. A small case often makes the cause obvious.
+5. **Match the pattern.** Look up the symptom in [reference/bug-patterns.md](reference/bug-patterns.md). It covers flaky tests, CI-only failures, wrong totals, dates and time zones, Arabic/RTL and encoding, caching, performance, nulls and auth.
+6. **List 2–3 hypotheses.** For each one, write the cheapest test that would rule it out, and run the cheapest first. Add logging or assertions to see real values instead of assuming them.
+7. **Confirm the cause.** You should be able to make the bug appear and disappear on purpose.
+8. **Write a failing test** that captures the bug, if the project has tests.
+9. **Make the smallest fix** at the cause, not at the symptom, and remove your temporary logging.
+10. **Verify.** The reproduction passes, the new test passes, and the full suite still passes. The verify-before-done skill covers this step.
 
 ## Stop rules
 
-- **Two fixes failed?** Stop patching. Go back to step 1 — your model of the bug is wrong.
-- **Fix needs a `try/catch`, `sleep`, retry or `if (x == null) return`** to "work"? You're probably hiding the symptom. Find out why the bad state happens.
-- **Can't find it after real effort?** Report what you ruled out, what you observed and your best hypothesis. That's more useful than a speculative fix.
+- **Two fixes have failed?** Stop patching and go back to step 1. Your picture of the bug is wrong.
+- **Does the fix need a `try/catch`, a `sleep`, a retry or `if (!x) return` to "work"?** You're probably hiding the symptom. Find out why the bad state happens.
+- **Is a test failing?** Don't change what it expects until you've shown that the test is wrong and the code is right.
+- **Still stuck after a real effort?** Report what you ruled out, what you observed and your best hypothesis. That helps more than a speculative fix.
 
 ## Report format
 
 ```markdown
-Cause: `formatPrice` received the amount in piasters but treated it as pounds, so totals were 100× too high. Introduced in a3f9c1 when the API switched units.
+Cause: `formatPrice` got the amount in piasters but treated it as pounds, so totals were 100× too high. Introduced in a3f9c1 when the API switched units.
 
-Fix: divide by 100 in `src/money/format.ts` at the API boundary.
+Fix: divide by 100 at the API boundary in `src/money/format.ts`.
 
-Evidence: new test `formatPrice converts piasters` failed before, passes now; full suite 212/212.
+Evidence: the new test `formatPrice converts piasters` failed before the fix and passes now; full suite 212/212.
+
+Ruled out: rounding (totals were exact multiples of 100), caching (also wrong in incognito).
 ```
+
+## Files in this skill
+
+- [scripts/what_changed.sh](scripts/what_changed.sh): the "what changed recently" report (bash 3.2+, read-only).
+- [reference/bug-patterns.md](reference/bug-patterns.md): where to look first, by symptom.
+- [templates/debug-log.md](templates/debug-log.md): a running debug log that becomes the final report.

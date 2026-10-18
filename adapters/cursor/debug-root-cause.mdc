@@ -1,0 +1,56 @@
+---
+description: Find and prove the root cause of a bug before changing code (reproduce → hypothesize → test → fix → verify). Use when something is broken, throws an error, crashes, fails a test, gives the wrong result, is flaky, is slow, "worked yesterday", or "works locally but not in CI", and especially after one fix attempt has already failed. Do not use for new features with no bug.
+alwaysApply: false
+---
+
+# Debug root cause
+
+Guess-and-patch debugging piles fixes on top of a bug nobody understood, and every failed guess adds noise. This skill makes you understand the bug first, so the first real fix is usually the last one.
+
+## The rule
+
+**No fix until you can explain the cause.** If you can't say "it fails because X, and changing Y fixes X", you're still guessing.
+
+## Procedure
+
+Keep notes in the format of [templates/debug-log.md](https://github.com/bassem132/debug-root-cause/blob/main/skills/debug-root-cause/templates/debug-log.md) as you go, so you don't re-test ideas you already ruled out.
+
+1. **Reproduce it.** Get a command, test or click path that fails every time, and write it down. If you can't reproduce it, gather more data first (logs, inputs, environment, which users).
+2. **Read the actual error.** Read the full message and stack trace, not a summary. Note the first frame that is in *this* project's code.
+3. **Check what changed** when it "used to work":
+   ```bash
+   bash .cursor/skills/debug-root-cause/scripts/what_changed.sh "3 days ago"      # or a tag/sha: v1.4.0, HEAD~20
+   ```
+   It shows uncommitted changes, recent commits, the files that changed most, dependency and lockfile bumps, config/env/CI changes, and runtime versions.
+4. **Shrink the case.** Remove inputs, steps and code until the failure is as small as you can make it. A small case often makes the cause obvious.
+5. **Match the pattern.** Look up the symptom in [reference/bug-patterns.md](https://github.com/bassem132/debug-root-cause/blob/main/skills/debug-root-cause/reference/bug-patterns.md). It covers flaky tests, CI-only failures, wrong totals, dates and time zones, Arabic/RTL and encoding, caching, performance, nulls and auth.
+6. **List 2–3 hypotheses.** For each one, write the cheapest test that would rule it out, and run the cheapest first. Add logging or assertions to see real values instead of assuming them.
+7. **Confirm the cause.** You should be able to make the bug appear and disappear on purpose.
+8. **Write a failing test** that captures the bug, if the project has tests.
+9. **Make the smallest fix** at the cause, not at the symptom, and remove your temporary logging.
+10. **Verify.** The reproduction passes, the new test passes, and the full suite still passes. The verify-before-done skill covers this step.
+
+## Stop rules
+
+- **Two fixes have failed?** Stop patching and go back to step 1. Your picture of the bug is wrong.
+- **Does the fix need a `try/catch`, a `sleep`, a retry or `if (!x) return` to "work"?** You're probably hiding the symptom. Find out why the bad state happens.
+- **Is a test failing?** Don't change what it expects until you've shown that the test is wrong and the code is right.
+- **Still stuck after a real effort?** Report what you ruled out, what you observed and your best hypothesis. That helps more than a speculative fix.
+
+## Report format
+
+```markdown
+Cause: `formatPrice` got the amount in piasters but treated it as pounds, so totals were 100× too high. Introduced in a3f9c1 when the API switched units.
+
+Fix: divide by 100 at the API boundary in `src/money/format.ts`.
+
+Evidence: the new test `formatPrice converts piasters` failed before the fix and passes now; full suite 212/212.
+
+Ruled out: rounding (totals were exact multiples of 100), caching (also wrong in incognito).
+```
+
+## Files in this skill
+
+- [scripts/what_changed.sh](https://github.com/bassem132/debug-root-cause/blob/main/skills/debug-root-cause/scripts/what_changed.sh): the "what changed recently" report (bash 3.2+, read-only).
+- [reference/bug-patterns.md](https://github.com/bassem132/debug-root-cause/blob/main/skills/debug-root-cause/reference/bug-patterns.md): where to look first, by symptom.
+- [templates/debug-log.md](https://github.com/bassem132/debug-root-cause/blob/main/skills/debug-root-cause/templates/debug-log.md): a running debug log that becomes the final report.
