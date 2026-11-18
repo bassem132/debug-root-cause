@@ -1,4 +1,4 @@
-<!-- debug-root-cause by Bassem Mo'men (MIT). Paste into your AGENTS.md if you don't install the full skill. -->
+<!-- debug-root-cause by Bassem Moumen (MIT). Paste into your AGENTS.md if you don't install the full skill. -->
 
 ## Debugging
 

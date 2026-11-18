@@ -1,7 +1,7 @@
 ---
 name: debug-root-cause
-description: Find and prove the root cause of a bug before changing code (reproduce → hypothesize → test → fix → verify). Use when something is broken, throws an error, crashes, fails a test, gives the wrong result, is flaky, is slow, "worked yesterday", or "works locally but not in CI", and especially after one fix attempt has already failed. Do not use for new features with no bug.
-author: Bassem Mo'men
+description: Find and prove the root cause of a bug before changing code (reproduce → hypothesize → test → fix → verify). Use when something is broken, throws an error, crashes, fails a test, gives the wrong result, is flaky, is slow, "worked yesterday", or "works locally but not in CI", and especially after one fix attempt has already failed. Do not use for new features with no bug, or when another debugging skill (such as systematic-debugging or diagnosing-bugs) is already driving this same bug; in that case reuse its loop and use this one only for its scripts, bug-patterns reference and report format.
+author: Bassem Moumen
 license: MIT
 ---
 
